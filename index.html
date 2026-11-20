@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f766e" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <title>আমার ডেইলি রুটিন (প্রোফাইল, নোট ও টার্গেট ট্র্যাকার)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #f4f7f6;
+      --card: #ffffff;
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #f0fdfa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Hind Siliguri", "Noto Sans Bengali", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 16px;
+    }
+    .container { max-width: 1140px; margin: 0 auto; }
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      padding: 20px 24px;
+      border-radius: 14px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 14px rgba(15, 118, 110, 0.18);
+    }
+    .profile-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .avatar-wrapper {
+      position: relative;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid rgba(255, 255, 255, 0.88);
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .avatar-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .avatar-placeholder {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: #fff;
+      user-select: none;
+    }
+    .profile-meta h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-meta p {
+      font-size: 0.9rem;
+      opacity: 0.94;
+      margin-top: 2px;
+    }
+    .profile-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .btn-light-sm {
+      padding: 5px 10px;
+      font-size: 0.78rem;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.94);
+      color: var(--primary-dark);
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-light-sm:hover { background: #ffffff; }
+    .btn-outline-sm {
+      padding: 5px 10px;
+      font-size: 0.78rem;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.16);
+      color: #fff;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      cursor: pointer;
+    }
+    .btn-outline-sm:hover { background: rgba(255, 255, 255, 0.26); }
+    .badge {
+      background: rgba(255,255,255,0.18);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+    .profile-edit-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 18px;
+      display: none;
+    }
+    .profile-edit-panel.open { display: block; }
+    .profile-edit-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+      margin-bottom: 12px;
+    }
+    .controls, .targets-box {
+      background: var(--card);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 18px;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .date-picker { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    label { font-weight: 600; font-size: 0.9rem; color: var(--text); display: block; margin-bottom: 4px; }
+    .inline-label { display: inline; margin-bottom: 0; }
+    select, input[type="number"], input[type="text"], textarea {
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      width: 100%;
+      background: #fff;
+    }
+    textarea {
+      min-height: 68px;
+      resize: vertical;
+    }
+    select { width: auto; min-width: 120px; }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    button {
+      padding: 9px 13px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: #e5e7eb; color: #1f2937; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .btn-danger { background: #fee2e2; color: #991b1b; }
+    .btn-danger:hover { background: #fecaca; }
+    .targets-box h2, .summary-section h2, .profile-edit-panel h2 {
+      font-size: 1.12rem;
+      margin-bottom: 10px;
+      color: var(--primary-dark);
+    }
+    .targets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .target-item {
+      background: var(--accent);
+      border: 1px solid #ccfbf1;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .progress-bar {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      transition: width 0.25s ease;
+    }
+    .progress-text {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .grid-sections {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+    .card h2 {
+      font-size: 1.08rem;
+      color: var(--primary-dark);
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .field-row {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 0.7fr;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .field-row.two-col { grid-template-columns: 1.3fr 1fr; }
+    .field-row label { margin-bottom: 0; }
+    .sub-hint { font-size: 0.75rem; color: var(--muted); text-align: center; }
+    .summary-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { border: 1px solid var(--border); padding: 9px 10px; text-align: center; }
+    th { background: var(--accent); color: var(--primary-dark); font-weight: 700; }
+    td:first-child, th:first-child { text-align: left; }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .install-banner {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 18px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .install-banner.show { display: flex; }
+    .reminder-bar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .reminder-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    .reminder-controls input[type="time"] {
+      padding: 7px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #111827;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: 0.25s ease;
+      pointer-events: none;
+      z-index: 99;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="profile-box">
+        <div class="avatar-wrapper">
+          <img id="profileImg" alt="Profile Picture" />
+          <span class="avatar-placeholder" id="profilePlaceholder">আ</span>
+        </div>
+        <div class="profile-meta">
+          <h1><span id="displayName">আমার ডেইলি রুটিন</span></h1>
+          <p id="displayStatusNote">নিজের নাম, স্ট্যাটাস বা লক্ষ্যের নোট যুক্ত ও আপডেট করুন</p>
+          <div class="profile-actions">
+            <input type="file" id="avatarInput" accept="image/*" style="display:none;" />
+            <button type="button" class="btn-light-sm" id="changeAvatarBtn">ছবি পরিবর্তন</button>
+            <button type="button" class="btn-light-sm" id="toggleProfileEditBtn">নাম ও নোট এডিট</button>
+            <button type="button" class="btn-outline-sm" id="removeAvatarBtn">ছবি মুছুন</button>
+          </div>
+        </div>
+      </div>
+      <div class="badge" id="pwaBadge">LocalStorage Ready</div>
+    </header>
+
+    <div class="profile-edit-panel" id="profileEditPanel">
+      <h2>প্রোফাইল নাম, স্ট্যাটাস ও লক্ষ্যের নোট</h2>
+      <div class="profile-edit-grid">
+        <div>
+          <label for="inputUserName">আপনার নাম / শিরোনাম</label>
+          <input type="text" id="inputUserName" placeholder="যেমন: আমার ডেইলি রুটিন" />
+        </div>
+        <div>
+          <label for="inputUserStatus">বর্তমান স্ট্যাটাস / লক্ষ্য</label>
+          <input type="text" id="inputUserStatus" placeholder="যেমন: নিয়মিত কুরআন, হাদীস ও আমলে সালিহা" />
+        </div>
+      </div>
+      <div>
+        <label for="inputGoalNote">বিস্তারিত লক্ষ্যের নোট</label>
+        <textarea id="inputGoalNote" placeholder="এই মাসে আপনার প্রধান লক্ষ্য বা রিমাইন্ডার নোট এখানে লিখুন..."></textarea>
+      </div>
+      <div class="btn-group" style="margin-top: 10px;">
+        <button type="button" class="btn-primary" id="saveProfileMetaBtn">প্রোফাইল তথ্য সেভ করুন</button>
+        <button type="button" class="btn-secondary" id="closeProfileEditBtn">বন্ধ করুন</button>
+      </div>
+    </div>
+
+    <div class="install-banner" id="installBanner">
+      <div>
+        <strong>অ্যাপটি ফোনে ইনস্টল করুন:</strong> হোম স্ক্রিনে যুক্ত করলে এটি আলাদা অ্যাপের মতো দ্রুত ও অফলাইনেও খুলবে।
+      </div>
+      <div class="btn-group">
+        <button type="button" class="btn-primary" id="installAppBtn">ইনস্টল করুন</button>
+        <button type="button" class="btn-secondary" id="dismissInstallBtn">পরে</button>
+      </div>
+    </div>
+
+    <div class="reminder-bar" id="reminderBar">
+      <div>
+        <strong>দৈনিক রিমাইন্ডার ও ব্যাকআপ রিস্টোর:</strong> নির্ধারিত সময়ে রুটিন আপডেটের ব্রাউজার নোটিফিকেশন সেট করুন বা JSON ব্যাকআপ ফিরিয়ে আনুন।
+      </div>
+      <div class="reminder-controls">
+        <input type="time" id="reminderTimeInput" value="21:30" />
+        <button type="button" class="btn-primary" id="toggleReminderBtn">রিমাইন্ডার চালু/বন্ধ</button>
+        <button type="button" class="btn-secondary" id="jumpTodayBtn">আজকের তারিখে যান</button>
+        <input type="file" id="importJsonInput" accept=".json,application/json" style="display:none;" />
+        <button type="button" class="btn-secondary" id="importJsonBtn">JSON ইমপোর্ট</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="date-picker">
+        <label for="monthSelect" class="inline-label">মাস:</label>
+        <select id="monthSelect">
+          <option value="January" selected>January</option>
+          <option value="February">February</option>
+          <option value="March">March</option>
+          <option value="April">April</option>
+          <option value="May">May</option>
+          <option value="June">June</option>
+          <option value="July">July</option>
+          <option value="August">August</option>
+          <option value="September">September</option>
+          <option value="October">October</option>
+          <option value="November">November</option>
+          <option value="December">December</option>
+        </select>
+
+        <label for="daySelect" class="inline-label">তারিখ:</label>
+        <select id="daySelect"></select>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-primary" id="saveBtn">সেভ করুন</button>
+        <button class="btn-secondary" id="exportCsvBtn">CSV ডাউনলোড</button>
+        <button class="btn-secondary" id="exportJsonBtn">JSON ব্যাকআপ</button>
+        <button class="btn-secondary" id="resetExcelBtn">Excel ডেটা রিস্টোর</button>
+        <button class="btn-danger" id="clearDayBtn">এই দিনের ডেটা মুছুন</button>
+      </div>
+    </div>
+
+    <div class="targets-box">
+      <h2>মাসিক টার্গেট ট্র্যাকার</h2>
+      <div class="targets-grid">
+        <div class="target-item">
+          <label for="target_quran">কুরআন আয়াত টার্গেট (মাসিক)</label>
+          <input type="number" min="1" id="target_quran" value="90" />
+          <div class="progress-bar"><div class="progress-fill" id="prog_quran"></div></div>
+          <div class="progress-text"><span id="txt_quran">0 / 90</span><span id="pct_quran">0%</span></div>
+        </div>
+        <div class="target-item">
+          <label for="target_hadith">হাদীস সংখ্যা টার্গেট (মাসিক)</label>
+          <input type="number" min="1" id="target_hadith" value="60" />
+          <div class="progress-bar"><div class="progress-fill" id="prog_hadith"></div></div>
+          <div class="progress-text"><span id="txt_hadith">0 / 60</span><span id="pct_hadith">0%</span></div>
+        </div>
+        <div class="target-item">
+          <label for="target_amale">আমলে সালিহা টার্গেট (মিনিট)</label>
+          <input type="number" min="1" id="target_amale" value="1200" />
+          <div class="progress-bar"><div class="progress-fill" id="prog_amale"></div></div>
+          <div class="progress-text"><span id="txt_amale">0 / 1200</span><span id="pct_amale">0%</span></div>
+        </div>
+        <div class="target-item">
+          <label for="target_duty">ডিউটি টার্গেট (ঘন্টা)</label>
+          <input type="number" min="1" id="target_duty" value="300" />
+          <div class="progress-bar"><div class="progress-fill" id="prog_duty"></div></div>
+          <div class="progress-text"><span id="txt_duty">0 / 300</span><span id="pct_duty">0%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <form id="routineForm">
+      <div class="grid-sections">
+        <div class="card">
+          <h2>শিক্ষা (এডুকেশন)</h2>
+          <div class="field-row">
+            <span></span>
+            <span class="sub-hint">সংখ্যা/মান</span>
+            <span class="sub-hint">দিন (০/১)</span>
+          </div>
+          <div class="field-row">
+            <label for="quran_val">কুরআন আয়াত</label>
+            <input type="number" step="any" id="quran_val" />
+            <input type="number" min="0" max="1" step="1" id="quran_day" placeholder="0/1" />
+          </div>
+          <div class="field-row">
+            <label for="hadith_val">হাদীস সংখ্যা</label>
+            <input type="number" step="any" id="hadith_val" />
+            <input type="number" min="0" max="1" step="1" id="hadith_day" placeholder="0/1" />
+          </div>
+          <div class="field-row">
+            <label for="other_pages_val">অন্যান্য পৃষ্ঠা</label>
+            <input type="number" step="any" id="other_pages_val" />
+            <input type="number" min="0" max="1" step="1" id="other_pages_day" placeholder="0/1" />
+          </div>
+          <div class="field-row two-col">
+            <label for="world_news">ওয়ার্ল্ড নিউজ</label>
+            <input type="number" step="any" id="world_news" />
+          </div>
+          <div class="field-row two-col">
+            <label for="lang_eng">ভাষা শিক্ষা - Eng</label>
+            <input type="text" id="lang_eng" />
+          </div>
+          <div class="field-row two-col">
+            <label for="lang_arb">ভাষা শিক্ষা - Arb / Arabic</label>
+            <input type="text" id="lang_arb" />
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>সলাত ও যোগাযোগ (আউটরিচ)</h2>
+          <div class="field-row two-col">
+            <label for="salat_jamat">সলাত (জামাত / কাদা)</label>
+            <input type="number" step="any" id="salat_jamat" />
+          </div>
+          <div class="field-row two-col">
+            <label for="salat_extra">সলাত (অতিরিক্ত/কাদা)</label>
+            <input type="number" step="any" id="salat_extra" />
+          </div>
+          <div class="field-row two-col">
+            <label for="desi_unknown">দেশী-ভাই (অপরিচিত)</label>
+            <input type="number" step="any" id="desi_unknown" />
+          </div>
+          <div class="field-row two-col">
+            <label for="desi_known">দেশী-ভাই (পরিচিত)</label>
+            <input type="number" step="any" id="desi_known" />
+          </div>
+          <div class="field-row two-col">
+            <label for="coworker">সহ-কর্মী</label>
+            <input type="number" step="any" id="coworker" />
+          </div>
+          <div class="field-row two-col">
+            <label for="family_bs">ফ্যামিলি মেম্বার (B / S)</label>
+            <input type="text" id="family_bs" />
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>আমলে সালিহা, ডিউটি ও বিশ্রাম</h2>
+          <div class="field-row">
+            <span></span>
+            <span class="sub-hint">সময়/ঘন্টা</span>
+            <span class="sub-hint">দিন (০/১)</span>
+          </div>
+          <div class="field-row">
+            <label for="amale_saleha_min">আমলে সালিহা (মিনিট)</label>
+            <input type="number" step="any" id="amale_saleha_min" />
+            <input type="number" min="0" max="1" step="1" id="amale_saleha_day" placeholder="0/1" />
+          </div>
+          <div class="field-row">
+            <label for="duty_hours">ডিউটি (কত ঘন্টা)</label>
+            <input type="number" step="any" id="duty_hours" />
+            <input type="number" min="0" max="1" step="1" id="duty_day" placeholder="0/1" />
+          </div>
+          <div class="field-row two-col">
+            <label for="clean_rest">পরিচ্ছন্নতা ও বিশ্রাম</label>
+            <input type="text" id="clean_rest" />
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="summary-section">
+      <h2 id="summaryTitle">মাসিক হিসাব (মোট ও গড়)</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>বিষয়</th>
+              <th>মোট (Total)</th>
+              <th>দিন সংখ্যা (Days)</th>
+              <th>গড় (Average)</th>
+            </tr>
+          </thead>
+          <tbody id="summaryBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="card">
+        <h2 id="eduChartTitle">দৈনিক শিক্ষা ট্রেন্ড (কুরআন ও হাদীস)</h2>
+        <canvas id="eduChart"></canvas>
+      </div>
+      <div class="card">
+        <h2 id="dutyChartTitle">দৈনিক ডিউটি ঘন্টা ও আমলে সালিহা (মিনিট)</h2>
+        <canvas id="dutyChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">সেভ হয়েছে!</div>
+
+  <script>
+    const STORAGE_KEY = "my_daily_routine_v4";
+    const TARGETS_KEY = "my_daily_routine_targets_v1";
+    const AVATAR_KEY = "my_daily_routine_avatar_v1";
+    const PROFILE_META_KEY = "my_daily_routine_profile_meta_v1";
+
+    const INITIAL_DATA = {
+      "January_1": { "quran_val": "3", "quran_day": "1", "hadith_val": "2", "hadith_day": "1", "other_pages_val": "10", "other_pages_day": "1", "world_news": "1", "salat_jamat": "3", "salat_extra": "0", "duty_day": "1", "clean_rest": "1" },
+      "January_2": { "quran_val": "3", "quran_day": "1", "hadith_val": "2", "hadith_day": "1", "world_news": "1", "salat_jamat": "2", "salat_extra": "0", "amale_saleha_min": "50", "amale_saleha_day": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_3": { "quran_val": "2", "quran_day": "1", "hadith_val": "2", "hadith_day": "1", "other_pages_val": "4", "other_pages_day": "1", "world_news": "1", "salat_jamat": "2", "salat_extra": "0", "coworker": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_4": { "quran_val": "3", "quran_day": "1", "hadith_val": "3", "hadith_day": "1", "other_pages_val": "5", "other_pages_day": "1", "world_news": "1", "salat_jamat": "3", "salat_extra": "0", "desi_unknown": "1", "amale_saleha_min": "50", "amale_saleha_day": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_5": { "quran_val": "2", "quran_day": "1", "hadith_val": "4", "hadith_day": "1", "other_pages_val": "8", "other_pages_day": "1", "world_news": "1", "salat_jamat": "4", "salat_extra": "0", "amale_saleha_min": "30", "amale_saleha_day": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_6": { "quran_val": "4", "quran_day": "1", "hadith_val": "1", "hadith_day": "1", "other_pages_val": "2", "other_pages_day": "1", "world_news": "1", "salat_jamat": "1", "salat_extra": "0", "amale_saleha_min": "65", "amale_saleha_day": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_7": { "quran_val": "6", "quran_day": "1", "hadith_val": "1", "hadith_day": "1", "other_pages_val": "4", "other_pages_day": "1", "salat_jamat": "2", "salat_extra": "0", "coworker": "1", "duty_hours": "11", "duty_day": "1", "clean_rest": "1" },
+      "January_8": { "hadith_val": "2", "hadith_day": "1", "other_pages_val": "11", "other_pages_day": "1", "world_news": "1", "salat_jamat": "3", "salat_extra": "0", "amale_saleha_min": "240", "amale_saleha_day": "1", "duty_hours": "8", "duty_day": "1", "clean_rest": "1" },
+      "January_9": { "quran_val": "1", "quran_day": "1", "hadith_val": "2", "hadith_day": "1", "other_pages_val": "4", "other_pages_day": "1", "world_news": "1", "salat_jamat": "2", "salat_extra": "0", "amale_saleha_min": "60", "amale_saleha_day": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_10": { "quran_val": "5", "quran_day": "1", "hadith_val": "0", "salat_jamat": "2", "salat_extra": "0", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_11": { "quran_val": "1", "quran_day": "1", "hadith_val": "1", "hadith_day": "1", "other_pages_val": "4", "other_pages_day": "1", "world_news": "1", "salat_jamat": "3", "salat_extra": "0", "amale_saleha_min": "50", "amale_saleha_day": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_12": { "quran_val": "4", "quran_day": "1", "hadith_val": "3", "hadith_day": "1", "other_pages_val": "8", "other_pages_day": "1", "world_news": "1", "salat_jamat": "2", "salat_extra": "0", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_13": { "quran_val": "5", "quran_day": "1", "hadith_val": "4", "hadith_day": "1", "salat_jamat": "3", "salat_extra": "0", "amale_saleha_min": "60", "amale_saleha_day": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_14": { "quran_val": "4", "quran_day": "1", "hadith_val": "1", "hadith_day": "1", "other_pages_val": "14", "other_pages_day": "1", "world_news": "1", "salat_jamat": "1", "salat_extra": "0", "coworker": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_15": { "quran_val": "1", "quran_day": "1", "hadith_val": "1", "hadith_day": "1", "other_pages_val": "4", "other_pages_day": "1", "salat_jamat": "2", "salat_extra": "0", "family_bs": "1", "amale_saleha_min": "240", "amale_saleha_day": "1", "duty_hours": "11", "duty_day": "1", "clean_rest": "1" },
+      "January_16": { "quran_val": "1", "quran_day": "1", "hadith_val": "2", "hadith_day": "1", "other_pages_val": "12", "other_pages_day": "1", "world_news": "1", "salat_jamat": "3", "salat_extra": "0", "amale_saleha_min": "50", "amale_saleha_day": "1", "duty_hours": "8", "duty_day": "1", "clean_rest": "1" },
+      "January_17": { "quran_val": "1", "quran_day": "1", "hadith_val": "2", "hadith_day": "1", "other_pages_val": "4", "other_pages_day": "1", "world_news": "1", "salat_jamat": "2", "salat_extra": "0", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_18": { "quran_val": "3", "quran_day": "1", "hadith_val": "0", "other_pages_val": "12", "other_pages_day": "1", "salat_jamat": "2", "salat_extra": "0", "family_bs": "1", "amale_saleha_min": "60", "amale_saleha_day": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_19": { "hadith_val": "1", "hadith_day": "1", "other_pages_val": "4", "other_pages_day": "1", "world_news": "1", "salat_jamat": "3", "salat_extra": "0", "amale_saleha_min": "70", "amale_saleha_day": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_20": { "quran_val": "4", "quran_day": "1", "hadith_val": "3", "hadith_day": "1", "other_pages_val": "8", "other_pages_day": "1", "world_news": "1", "salat_jamat": "2", "salat_extra": "0", "amale_saleha_min": "65", "amale_saleha_day": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_21": { "quran_val": "3", "quran_day": "1", "hadith_val": "2", "salat_jamat": "3", "salat_extra": "0", "family_bs": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_22": { "quran_val": "4", "quran_day": "1", "hadith_val": "1", "hadith_day": "1", "other_pages_val": "23", "other_pages_day": "1", "world_news": "1", "salat_jamat": "1", "salat_extra": "0", "desi_unknown": "1", "amale_saleha_min": "15", "amale_saleha_day": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_23": { "quran_val": "4", "quran_day": "1", "hadith_val": "1", "hadith_day": "1", "other_pages_val": "15", "other_pages_day": "1", "world_news": "1", "salat_jamat": "1", "salat_extra": "0", "family_bs": "1", "amale_saleha_min": "50", "amale_saleha_day": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_24": { "quran_val": "4", "quran_day": "1", "hadith_val": "1", "hadith_day": "1", "world_news": "1", "salat_jamat": "1", "salat_extra": "0", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_25": { "quran_val": "1", "quran_day": "1", "hadith_val": "1", "hadith_day": "1", "other_pages_val": "4", "other_pages_day": "1", "world_news": "1", "salat_jamat": "2", "salat_extra": "0", "family_bs": "1", "duty_hours": "11", "duty_day": "1", "clean_rest": "1" },
+      "January_26": { "quran_val": "3", "quran_day": "1", "hadith_val": "3", "other_pages_val": "25", "other_pages_day": "1", "world_news": "1", "salat_jamat": "3", "duty_hours": "11", "duty_day": "1", "clean_rest": "1" },
+      "January_27": { "quran_val": "5", "quran_day": "1", "hadith_val": "5", "other_pages_val": "10", "other_pages_day": "1", "world_news": "1", "salat_jamat": "2", "amale_saleha_min": "50", "amale_saleha_day": "1", "duty_hours": "8", "duty_day": "1", "clean_rest": "1" },
+      "January_28": { "quran_val": "5", "quran_day": "1", "hadith_val": "5", "other_pages_val": "12", "other_pages_day": "1", "world_news": "1", "salat_jamat": "3", "desi_unknown": "1", "duty_hours": "12", "duty_day": "1", "clean_rest": "1" },
+      "January_29": { "quran_val": "3", "quran_day": "1", "hadith_val": "3", "other_pages_val": "23", "other_pages_day": "1", "world_news": "1", "salat_jamat": "2", "duty_hours": "12", "clean_rest": "1" },
+      "January_30": { "quran_val": "4", "quran_day": "1", "hadith_val": "2", "other_pages_val": "10", "other_pages_day": "1", "world_news": "1", "salat_jamat": "2", "duty_hours": "11", "clean_rest": "1" },
+      "November_1": { "quran_val": "3", "hadith_val": "2", "other_pages_val": "10", "world_news": "1", "salat_jamat": "3", "salat_extra": "0", "amale_saleha_min": "40", "duty_hours": "13", "clean_rest": "1" },
+      "November_2": { "quran_val": "3", "hadith_val": "2", "other_pages_val": "1", "world_news": "1", "salat_jamat": "2", "salat_extra": "0", "amale_saleha_min": "300", "duty_hours": "13", "clean_rest": "1" },
+      "November_3": { "quran_val": "2", "hadith_val": "2", "other_pages_val": "4", "world_news": "1", "salat_jamat": "4", "salat_extra": "0", "amale_saleha_min": "60", "duty_hours": "8", "clean_rest": "1" },
+      "November_4": { "quran_val": "1", "hadith_val": "3", "other_pages_val": "5", "world_news": "1", "salat_jamat": "3", "salat_extra": "0", "desi_unknown": "1", "amale_saleha_min": "15", "duty_hours": "13", "clean_rest": "1" }
+    };
+
+    const fields = [
+      "quran_val", "quran_day", "hadith_val", "hadith_day",
+      "other_pages_val", "other_pages_day", "world_news",
+      "lang_eng", "lang_arb", "salat_jamat", "salat_extra",
+      "desi_unknown", "desi_known", "coworker", "family_bs",
+      "amale_saleha_min", "amale_saleha_day", "duty_hours",
+      "duty_day", "clean_rest"
+    ];
+
+    const summaryMetrics = [
+      { label: "কুরআন আয়াত", valKey: "quran_val", dayKey: "quran_day" },
+      { label: "হাদীস সংখ্যা", valKey: "hadith_val", dayKey: "hadith_day" },
+      { label: "অন্যান্য পৃষ্ঠা", valKey: "other_pages_val", dayKey: "other_pages_day" },
+      { label: "ওয়ার্ল্ড নিউজ", valKey: "world_news", dayKey: null },
+      { label: "সলাত (জামাত/কাদা)", valKey: "salat_jamat", dayKey: null },
+      { label: "দেশী-ভাই (অপরিচিত)", valKey: "desi_unknown", dayKey: null },
+      { label: "দেশী-ভাই (পরিচিত)", valKey: "desi_known", dayKey: null },
+      { label: "সহ-কর্মী", valKey: "coworker", dayKey: null },
+      { label: "আমলে সালিহা (মিনিট)", valKey: "amale_saleha_min", dayKey: "amale_saleha_day" },
+      { label: "ডিউটি (ঘন্টা)", valKey: "duty_hours", dayKey: "duty_day" }
+    ];
+
+    const monthSelect = document.getElementById("monthSelect");
+    const daySelect = document.getElementById("daySelect");
+    const summaryBody = document.getElementById("summaryBody");
+    const summaryTitle = document.getElementById("summaryTitle");
+    const toast = document.getElementById("toast");
+
+    const profileImg = document.getElementById("profileImg");
+    const profilePlaceholder = document.getElementById("profilePlaceholder");
+    const avatarInput = document.getElementById("avatarInput");
+    const changeAvatarBtn = document.getElementById("changeAvatarBtn");
+    const removeAvatarBtn = document.getElementById("removeAvatarBtn");
+
+    const profileEditPanel = document.getElementById("profileEditPanel");
+    const toggleProfileEditBtn = document.getElementById("toggleProfileEditBtn");
+    const closeProfileEditBtn = document.getElementById("closeProfileEditBtn");
+    const saveProfileMetaBtn = document.getElementById("saveProfileMetaBtn");
+    const displayNameEl = document.getElementById("displayName");
+    const displayStatusNoteEl = document.getElementById("displayStatusNote");
+    const inputUserName = document.getElementById("inputUserName");
+    const inputUserStatus = document.getElementById("inputUserStatus");
+    const inputGoalNote = document.getElementById("inputGoalNote");
+
+    let eduChartInstance = null;
+    let dutyChartInstance = null;
+
+    function loadProfileMeta() {
+      try {
+        return JSON.parse(localStorage.getItem(PROFILE_META_KEY)) || {
+          name: "আমার ডেইলি রুটিন",
+          status: "নিয়মিত কুরআন, হাদীস ও আমলে সালিহা ট্র্যাকার",
+          goalNote: ""
+        };
+      } catch {
+        return {
+          name: "আমার ডেইলি রুটিন",
+          status: "নিয়মিত কুরআন, হাদীস ও আমলে সালিহা ট্র্যাকার",
+          goalNote: ""
+        };
+      }
+    }
+
+    function renderProfileMeta() {
+      const meta = loadProfileMeta();
+      const titleText = meta.name || "আমার ডেইলি রুটিন";
+      displayNameEl.textContent = titleText;
+      profilePlaceholder.textContent = Array.from(titleText.trim())[0] || "আ";
+
+      let subText = meta.status || "";
+      if (meta.goalNote && meta.goalNote.trim() !== "") {
+        subText = subText ? `${subText} • লক্ষ্য: ${meta.goalNote.trim()}` : `লক্ষ্য: ${meta.goalNote.trim()}`;
+      }
+      displayStatusNoteEl.textContent = subText || "নিজের নাম, স্ট্যাটাস বা লক্ষ্যের নোট যুক্ত ও আপডেট করুন";
+
+      inputUserName.value = meta.name || "";
+      inputUserStatus.value = meta.status || "";
+      inputGoalNote.value = meta.goalNote || "";
+    }
+
+    function loadAvatar() {
+      const saved = localStorage.getItem(AVATAR_KEY);
+      if (saved) {
+        profileImg.src = saved;
+        profileImg.style.display = "block";
+        profilePlaceholder.style.display = "none";
+      } else {
+        profileImg.src = "";
+        profileImg.style.display = "none";
+        profilePlaceholder.style.display = "block";
+      }
+    }
+
+    changeAvatarBtn.addEventListener("click", () => avatarInput.click());
+
+    avatarInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        showToast("২ MB-এর ছোট ছবি নির্বাচন করুন");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          localStorage.setItem(AVATAR_KEY, reader.result);
+          loadAvatar();
+          showToast("প্রোফাইল পিকচার আপডেট হয়েছে");
+        } catch {
+          showToast("ছবি সেভ করা যায়নি, ছোট ছবি ব্যবহার করুন");
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    removeAvatarBtn.addEventListener("click", () => {
+      localStorage.removeItem(AVATAR_KEY);
+      avatarInput.value = "";
+      loadAvatar();
+      showToast("প্রোফাইল পিকচার মুছে ফেলা হয়েছে");
+    });
+
+    toggleProfileEditBtn.addEventListener("click", () => {
+      profileEditPanel.classList.toggle("open");
+    });
+
+    closeProfileEditBtn.addEventListener("click", () => {
+      profileEditPanel.classList.remove("open");
+    });
+
+    saveProfileMetaBtn.addEventListener("click", () => {
+      const updated = {
+        name: inputUserName.value.trim() || "আমার ডেইলি রুটিন",
+        status: inputUserStatus.value.trim(),
+        goalNote: inputGoalNote.value.trim()
+      };
+      localStorage.setItem(PROFILE_META_KEY, JSON.stringify(updated));
+      renderProfileMeta();
+      profileEditPanel.classList.remove("open");
+      showToast("প্রোফাইল নাম ও লক্ষ্যের নোট সেভ হয়েছে");
+    });
+
+    function initDays() {
+      for (let d = 1; d <= 31; d++) {
+        const opt = document.createElement("option");
+        opt.value = d;
+        opt.textContent = `${d} তারিখ`;
+        daySelect.appendChild(opt);
+      }
+    }
+
+    function loadAllData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_DATA));
+        return JSON.parse(JSON.stringify(INITIAL_DATA));
+      } catch {
+        return JSON.parse(JSON.stringify(INITIAL_DATA));
+      }
+    }
+
+    function saveAllData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadTargets() {
+      try {
+        return JSON.parse(localStorage.getItem(TARGETS_KEY)) || {
+          quran: 90, hadith: 60, amale: 1200, duty: 300
+        };
+      } catch {
+        return { quran: 90, hadith: 60, amale: 1200, duty: 300 };
+      }
+    }
+
+    function saveTargets() {
+      const t = {
+        quran: parseFloat(document.getElementById("target_quran").value) || 1,
+        hadith: parseFloat(document.getElementById("target_hadith").value) || 1,
+        amale: parseFloat(document.getElementById("target_amale").value) || 1,
+        duty: parseFloat(document.getElementById("target_duty").value) || 1
+      };
+      localStorage.setItem(TARGETS_KEY, JSON.stringify(t));
+      renderSummary();
+    }
+
+    function restoreExcelData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_DATA));
+      populateDayForm();
+      showToast("Excel ফাইলের মূল ডেটা রিস্টোর করা হয়েছে");
+    }
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2000);
+    }
+
+    function getCurrentKey() {
+      return `${monthSelect.value}_${daySelect.value}`;
+    }
+
+    function populateDayForm() {
+      const allData = loadAllData();
+      const dayData = allData[getCurrentKey()] || {};
+      fields.forEach((f) => {
+        document.getElementById(f).value = dayData[f] ?? "";
+      });
+      renderSummary();
+      renderCharts();
+    }
+
+    function saveCurrentDay() {
+      const allData = loadAllData();
+      const dayData = {};
+      fields.forEach((f) => {
+        const val = document.getElementById(f).value.trim();
+        if (val !== "") dayData[f] = val;
+      });
+      allData[getCurrentKey()] = dayData;
+      saveAllData(allData);
+      renderSummary();
+      renderCharts();
+      showToast(`${monthSelect.value} - ${daySelect.value} তারিখের ডেটা সেভ হয়েছে`);
+    }
+
+    function clearCurrentDay() {
+      const allData = loadAllData();
+      delete allData[getCurrentKey()];
+      saveAllData(allData);
+      populateDayForm();
+      showToast("এই দিনের ডেটা মুছে ফেলা হয়েছে");
+    }
+
+    function updateTargetProgress(key, currentVal, targetVal) {
+      const pct = Math.min(100, Math.max(0, (currentVal / Math.max(1, targetVal)) * 100));
+      document.getElementById(`prog_${key}`).style.width = `${pct.toFixed(1)}%`;
+      document.getElementById(`txt_${key}`).textContent = `${Number.isInteger(currentVal) ? currentVal : currentVal.toFixed(1)} / ${targetVal}`;
+      document.getElementById(`pct_${key}`).textContent = `${pct.toFixed(0)}%`;
+    }
+
+    function renderSummary() {
+      const month = monthSelect.value;
+      summaryTitle.textContent = `${month} মাসের হিসাব (মোট ও গড়)`;
+      const allData = loadAllData();
+      const monthEntries = Object.entries(allData)
+        .filter(([k]) => k.startsWith(`${month}_`))
+        .map(([, v]) => v);
+
+      summaryBody.innerHTML = "";
+      const totalsMap = {};
+
+      summaryMetrics.forEach((m) => {
+        let total = 0;
+        let activeDays = 0;
+        let countWithVal = 0;
+
+        monthEntries.forEach((entry) => {
+          const num = parseFloat(entry[m.valKey]);
+          if (!isNaN(num)) {
+            total += num;
+            countWithVal += 1;
+          }
+          if (m.dayKey) {
+            const dNum = parseFloat(entry[m.dayKey]);
+            if (!isNaN(dNum) && dNum > 0) activeDays += dNum;
+          } else if (!isNaN(num) && num > 0) {
+            activeDays += 1;
+          }
+        });
+
+        totalsMap[m.valKey] = total;
+        const avg = countWithVal > 0 ? (total / countWithVal).toFixed(2) : "0.00";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${m.label}</td>
+          <td><strong>${Number.isInteger(total) ? total : total.toFixed(2)}</strong></td>
+          <td>${activeDays}</td>
+          <td>${avg}</td>
+        `;
+        summaryBody.appendChild(tr);
+      });
+
+      const targets = loadTargets();
+      document.getElementById("target_quran").value = targets.quran;
+      document.getElementById("target_hadith").value = targets.hadith;
+      document.getElementById("target_amale").value = targets.amale;
+      document.getElementById("target_duty").value = targets.duty;
+
+      updateTargetProgress("quran", totalsMap.quran_val || 0, targets.quran);
+      updateTargetProgress("hadith", totalsMap.hadith_val || 0, targets.hadith);
+      updateTargetProgress("amale", totalsMap.amale_saleha_min || 0, targets.amale);
+      updateTargetProgress("duty", totalsMap.duty_hours || 0, targets.duty);
+    }
+
+    function renderCharts() {
+      if (typeof Chart === "undefined") return;
+      const month = monthSelect.value;
+      const allData = loadAllData();
+      const labels = [];
+      const quranArr = [];
+      const hadithArr = [];
+      const dutyArr = [];
+      const amaleArr = [];
+
+      for (let d = 1; d <= 31; d++) {
+        labels.push(`${d}`);
+        const e = allData[`${month}_${d}`] || {};
+        quranArr.push(parseFloat(e.quran_val) || 0);
+        hadithArr.push(parseFloat(e.hadith_val) || 0);
+        dutyArr.push(parseFloat(e.duty_hours) || 0);
+        amaleArr.push(parseFloat(e.amale_saleha_min) || 0);
+      }
+
+      document.getElementById("eduChartTitle").textContent = `${month} - কুরআন আয়াত ও হাদীস সংখ্যা`;
+      document.getElementById("dutyChartTitle").textContent = `${month} - ডিউটি ঘন্টা ও আমলে সালিহা (মিনিট)`;
+
+      if (eduChartInstance) eduChartInstance.destroy();
+      eduChartInstance = new Chart(document.getElementById("eduChart"), {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            { label: "কুরআন আয়াত", data: quranArr, backgroundColor: "#0f766e" },
+            { label: "হাদীস সংখ্যা", data: hadithArr, backgroundColor: "#f59e0b" }
+          ]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+      });
+
+      if (dutyChartInstance) dutyChartInstance.destroy();
+      dutyChartInstance = new Chart(document.getElementById("dutyChart"), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            { label: "ডিউটি ঘন্টা", data: dutyArr, borderColor: "#2563eb", tension: 0.25, fill: false },
+            { label: "আমলে সালিহা (মিনিট)", data: amaleArr, borderColor: "#16a34a", tension: 0.25, fill: false }
+          ]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+      });
+    }
+
+    function exportCSV() {
+      const month = monthSelect.value;
+      const allData = loadAllData();
+      const rows = [["Month", "Day", ...fields]];
+      for (let d = 1; d <= 31; d++) {
+        const entry = allData[`${month}_${d}`] || {};
+        rows.push([month, d, ...fields.map((f) => entry[f] ?? "")]);
+      }
+      const csvContent = rows
+        .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+        .join("\n");
+      const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Daily_Routine_${month}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("CSV ফাইল ডাউনলোড হয়েছে");
+    }
+
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify(loadAllData(), null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "daily_routine_backup.json";
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("JSON ব্যাকআপ ডাউনলোড হয়েছে");
+    }
+
+    ["target_quran", "target_hadith", "target_amale", "target_duty"].forEach((id) => {
+      document.getElementById(id).addEventListener("input", saveTargets);
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", saveCurrentDay);
+    document.getElementById("clearDayBtn").addEventListener("click", clearCurrentDay);
+    document.getElementById("exportCsvBtn").addEventListener("click", exportCSV);
+    document.getElementById("exportJsonBtn").addEventListener("click", exportJSON);
+    document.getElementById("resetExcelBtn").addEventListener("click", restoreExcelData);
+    monthSelect.addEventListener("change", populateDayForm);
+    daySelect.addEventListener("change", populateDayForm);
+
+    const REMINDER_KEY = "my_daily_routine_reminder_v1";
+    const installBanner = document.getElementById("installBanner");
+    const installAppBtn = document.getElementById("installAppBtn");
+    const dismissInstallBtn = document.getElementById("dismissInstallBtn");
+    const reminderTimeInput = document.getElementById("reminderTimeInput");
+    const toggleReminderBtn = document.getElementById("toggleReminderBtn");
+    const jumpTodayBtn = document.getElementById("jumpTodayBtn");
+    const importJsonInput = document.getElementById("importJsonInput");
+    const importJsonBtn = document.getElementById("importJsonBtn");
+
+    let deferredInstallPrompt = null;
+    let lastNotifiedStamp = "";
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      installBanner.classList.add("show");
+    });
+
+    installAppBtn.addEventListener("click", async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installBanner.classList.remove("show");
+      if (choice.outcome === "accepted") {
+        showToast("অ্যাপটি ইনস্টল হয়েছে");
+      }
+    });
+
+    dismissInstallBtn.addEventListener("click", () => {
+      installBanner.classList.remove("show");
+    });
+
+    function loadReminderSettings() {
+      try {
+        return JSON.parse(localStorage.getItem(REMINDER_KEY)) || { enabled: false, time: "21:30" };
+      } catch {
+        return { enabled: false, time: "21:30" };
+      }
+    }
+
+    function renderReminderButton() {
+      const cfg = loadReminderSettings();
+      reminderTimeInput.value = cfg.time || "21:30";
+      toggleReminderBtn.textContent = cfg.enabled ? `রিমাইন্ডার চালু (${cfg.time})` : "রিমাইন্ডার চালু করুন";
+    }
+
+    toggleReminderBtn.addEventListener("click", async () => {
+      const cfg = loadReminderSettings();
+      const chosenTime = reminderTimeInput.value || "21:30";
+      if (!cfg.enabled) {
+        if ("Notification" in window && Notification.permission === "default") {
+          await Notification.requestPermission();
+        }
+        localStorage.setItem(REMINDER_KEY, JSON.stringify({ enabled: true, time: chosenTime }));
+        renderReminderButton();
+        showToast(`প্রতিদিন ${chosenTime} সময়ের রিমাইন্ডার চালু হয়েছে`);
+      } else {
+        localStorage.setItem(REMINDER_KEY, JSON.stringify({ enabled: false, time: chosenTime }));
+        renderReminderButton();
+        showToast("রিমাইন্ডার বন্ধ করা হয়েছে");
+      }
+    });
+
+    reminderTimeInput.addEventListener("change", () => {
+      const cfg = loadReminderSettings();
+      cfg.time = reminderTimeInput.value || "21:30";
+      localStorage.setItem(REMINDER_KEY, JSON.stringify(cfg));
+      renderReminderButton();
+    });
+
+    setInterval(() => {
+      const cfg = loadReminderSettings();
+      if (!cfg.enabled || !cfg.time) return;
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+      const currentHM = `${hh}:${mm}`;
+      const stamp = `${now.toDateString()}_${currentHM}`;
+      if (currentHM === cfg.time && lastNotifiedStamp !== stamp) {
+        lastNotifiedStamp = stamp;
+        showToast("আজকের ডেইলি রুটিন আপডেট করার সময় হয়েছে!");
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("আমার ডেইলি রুটিন", {
+            body: "আজকের কুরআন, হাদীস, আমলে সালিহা ও ডিউটির হিসাব সেভ করুন।"
+          });
+        }
+      }
+    }, 20000);
+
+    jumpTodayBtn.addEventListener("click", () => {
+      const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      const now = new Date();
+      monthSelect.value = monthNames[now.getMonth()];
+      daySelect.value = String(now.getDate());
+      populateDayForm();
+      showToast(`${monthSelect.value} - ${daySelect.value} তারিখে আসা হয়েছে`);
+    });
+
+    importJsonBtn.addEventListener("click", () => importJsonInput.click());
+
+    importJsonInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            saveAllData(parsed);
+            populateDayForm();
+            showToast("JSON ব্যাকআপ সফলভাবে ইমপোর্ট হয়েছে");
+          } else {
+            showToast("সঠিক JSON ব্যাকআপ ফাইল নির্বাচন করুন");
+          }
+        } catch {
+          showToast("JSON ফাইল পড়া যায়নি");
+        }
+        importJsonInput.value = "";
+      };
+      reader.readAsText(file);
+    });
+
+    renderReminderButton();
+    loadProfileMeta();
+    loadAvatar();
+    initDays();
+    populateDayForm();
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
