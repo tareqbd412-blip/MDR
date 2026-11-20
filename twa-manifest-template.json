@@ -1,0 +1,18 @@
+{
+  "packageId": "com.example.mydailyroutine",
+  "host": "your-username.github.io",
+  "name": "আমার ডেইলি রুটিন",
+  "launcherName": "ডেইলি রুটিন",
+  "display": "standalone",
+  "themeColor": "#0f766e",
+  "navigationColor": "#0f766e",
+  "backgroundColor": "#f4f7f6",
+  "enableNotifications": true,
+  "startingUrl": "/daily-routine-app/index.html",
+  "iconUrl": "https://your-username.github.io/daily-routine-app/icons/icon-512.png",
+  "maskableIconUrl": "https://your-username.github.io/daily-routine-app/icons/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "generator": "PWABuilder / Bubblewrap"
+}
